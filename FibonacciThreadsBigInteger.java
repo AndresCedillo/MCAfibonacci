@@ -1,71 +1,79 @@
 import java.math.BigInteger;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Hashtable;
 
-public class FibonacciThreadsBigInteger implements Runnable {
+// NOTA: La clase pública DEBE llamarse FibonacciThreadsMemoizedBigInteger
+public class FibonacciThreadsMemoizedBigInteger implements Runnable {
 
-    // Caché estática para memoización, segura para hilos.
-    private static final ConcurrentHashMap<BigInteger, BigInteger> memo = new ConcurrentHashMap<>();
-
-    // Inicializar los casos base F(0) y F(1) en el caché.
+    // Hashtable STATIC para la Memoización: (Posición BigInteger, Valor BigInteger)
+    private static final Hashtable<BigInteger, BigInteger> memo = new Hashtable<>();
+    
+    // Inicialización estática de los casos base: F(0)=0, F(1)=1
     static {
-        memo.put(BigInteger.ZERO, BigInteger.ZERO); // F(0) = 0
-        memo.put(BigInteger.ONE, BigInteger.ONE);   // F(1) = 1
+        memo.put(BigInteger.ZERO, BigInteger.ZERO); 
+        memo.put(BigInteger.ONE, BigInteger.ONE);   
     }
 
     BigInteger fi;
     int num;
 
-    public FibonacciThreadsBigInteger(int n, BigInteger f) {
+    public FibonacciThreadsMemoizedBigInteger(int n, BigInteger f) {
         num = n;
         fi = f;
     }
 
     @Override
     public void run() {
-        // En una implementación real, 'IO.println' requeriría una clase 'IO' que no está definida.
-        // Asumiendo que es un reemplazo de 'System.out.println' o similar.
-        System.out.println("Starte #" + num);
-
+        System.out.println("Starte #" + num + " para F(" + fi + ")");
         BigInteger res = fibonacci(fi);
-
         System.out.println("Abschlussverfahren: " + num +
                            " - " + "fibonacci(" + fi + ") =" + res);
     }
 
-    // Método fibonacci modificado con memoización
-    public BigInteger fibonacci(BigInteger f) {
-        // 1. Verificar si el resultado ya está en el caché
-        if (memo.containsKey(f)) {
-            return memo.get(f);
+    /**
+     * Función Fibonacci recursiva con Memoización (O(n) en tiempo).
+     * Usa BigInteger para manejar valores gigantes.
+     */
+    public BigInteger fibonacci(BigInteger n) {
+        
+        // 1. Revisar Memoria
+        if (memo.containsKey(n)) {
+            return memo.get(n);
+        }
+        
+        // 2. Caso Base
+        if (n.compareTo(BigInteger.TWO) < 0) {
+            return memo.getOrDefault(n, n); 
         }
 
-        // 2. Si no está, calcularlo de forma recursiva (con memoización para las subllamadas)
-        // La condición de parada original: f < 2 retorna 1. La secuencia estándar es F(0)=0, F(1)=1.
-        // Asumiendo que el usuario busca la secuencia donde F(1)=1, F(2)=1, F(3)=2, ...
-        // El caso base ya está manejado por el caché (F(0)=0, F(1)=1).
+        // 3. Calcular y Memoizar
+        BigInteger nMinusOne = n.subtract(BigInteger.ONE);
+        BigInteger nMinusTwo = n.subtract(BigInteger.TWO);
+        
+        // Las llamadas recursivas se benefician de la memoización compartida
+        BigInteger fibNMinusOne = fibonacci(nMinusOne);
+        BigInteger fibNMinusTwo = fibonacci(nMinusTwo);
+        
+        BigInteger result = fibNMinusOne.add(fibNMinusTwo);
 
-        // Calcular F(n) = F(n-1) + F(n-2)
-        BigInteger f_minus_1 = f.subtract(BigInteger.ONE);
-        BigInteger f_minus_2 = f.subtract(BigInteger.TWO);
+        // 4. Guardar resultado
+        memo.put(n, result);
 
-        BigInteger result = fibonacci(f_minus_1).add(fibonacci(f_minus_2));
-
-        // 3. Almacenar el resultado en el caché antes de retornarlo
-        memo.put(f, result);
         return result;
     }
 
-    static void main() {
+    /**
+     * FIRMA DE MAIN CORREGIDA: public static void main(String[] args)
+     */
+    public static void main(String[] args) {
         Thread[] threads = new Thread[10];
 
+        // Se prueban posiciones grandes (ej. n entre 100 y 1000) para demostrar la eficiencia
         for (int i = 0; i < 10; i++) {
-            // Genera números entre 1 y 50. Para BigInteger, podemos subir el límite
-            // para mostrar el poder de esta clase, por ejemplo, hasta 1000,
-            // pero lo mantendré en 50 para evitar cálculos excesivamente largos aquí.
-            long algo = (long) (Math.random() * 50) + 1;
+            long algo = (long) (Math.random() * 900) + 100; 
             threads[i] = new Thread(
-                    new FibonacciThreadsBigInteger(i, BigInteger.valueOf(algo)));
+                    new FibonacciThreadsMemoizedBigInteger(i, BigInteger.valueOf(algo)));
         }
+        
         for (int i = 0; i < 10; i++) threads[i].start();
     }
 }
