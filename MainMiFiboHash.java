@@ -1,3 +1,9 @@
+//Actividad 3. Clase Hashtable en Java.
+// En Python usamos la estructura de datos “Dict” (Diccionario) para mantener la memoria. Java
+ //tiene su estructura de datos analoga que es la clase Hashtable.
+ //Para que veas su manejo muy basico, implementa el siguiente codigo
+ //MainMiFiboHash.java
+ //Nota: Se uso Java 25
 import java.util.Hashtable;
 import java.util.Set;
 import java.util.Map.Entry;
@@ -40,3 +46,4 @@ public class MainMiFiboHash {
         System.out.println(fiboSuc);
     }
 }
+
